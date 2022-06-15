@@ -1,0 +1,369 @@
+<script src="https://unpkg.com/vue@3"></script>
+
+<div id="app">
+    <h2 class="title">{{title}}</h2>
+    <div class="selectContainer">
+        <label>Choose your opponent difficulty...</label>  
+        <select 
+            id='difficulty'
+            name='difficulty'
+            class="select"
+            @change="handleSelect"
+            >
+            <option value="1" selected>Easy</option>
+            <option value="2">Expert</option>
+          </select>
+        </div>
+    <div class="container">
+        <div class="elementContainer">
+            <div v-for="i in board" :key="i">
+                <button @click="playerMove(i)" class="elements">{{i.content}}</button>                
+            </div>
+        </div>
+    </div>
+    <div class="resetContainer">
+        <button class="reset" @click="reset()">Reset</button>
+    </div>
+</div>
+
+<script>
+  const { createApp } = Vue
+
+  createApp({
+    data() {
+      return {
+        title: "Tic Tac Toe",
+        difficulty: 1,
+        board: [
+            {
+                index: 0,
+                content: null,
+            },
+            {
+                index: 1,
+                content: null,
+            },
+            {
+                index: 2,
+                content: null,
+            },
+            {
+                index: 3,
+                content: null,
+            },
+            {
+                index: 4,
+                content: null,
+            },
+            {
+                index: 5,
+                content: null,
+            },
+            {
+                index: 6,
+                content: null, 
+            },
+            {
+                index: 7,
+                content: null,
+            },
+            {
+                index: 8,
+                content: null,
+            }, 
+        ],
+        xMoves: [],
+        oMoves: [],
+        computerTurn: false,
+        endGame: false,
+        winningLines: [[0, 1, 2],[3, 4, 5],[6, 7, 8],[0, 3, 6],[1, 4, 7],[2, 5, 8],[0, 4, 8],[2, 4, 6]],
+    }
+    },
+    watch: {
+        'xMoves': {
+            handler: function() {
+                this.checkWinner(this.xMoves)
+            },
+        deep: true
+        },
+        'oMoves': {
+            handler: function() {
+                this.checkWinner(this.oMoves)
+            },
+        deep: true
+        },
+        'computerTurn': {
+            handler: function() {
+                if(this.computerTurn === true) {
+                    this.computerMove()
+                }
+            },
+        }
+    },
+    methods: {
+        handleSelect(e) {
+            this.difficulty = e.target.value
+        },
+        checkWinner(player) {
+            const winningLines = this.winningLines;
+                for( let i=0; i < winningLines.length; i++){
+                    const [a, b, c] = winningLines[i]
+                    if (player.includes(a) && player.includes(b) && player.includes(c)) {
+                        if (player === this.oMoves && this.computerTurn === false) {
+                            this.endGame = true;
+                            alert('Computer defeated you 😈')
+                        } else if (player === this.xMoves && this.computerTurn === true) {
+                            this.computerTurn = false;
+                            this.endGame = true;
+                            alert('You beat your computer! 💃')
+                        }
+                    }
+                }
+        },
+        randomNumber(availableSquares){
+            let arr = availableSquares.length
+            let randomIndex = Math.floor(Math.random() * arr)
+            return availableSquares[randomIndex]
+        },
+        availableSquares(){
+            let availableSquares = [];
+                
+            for ( let i=0; i < this.board.length; i++ ) {
+                if (!this.board[i].content) {
+                    availableSquares.push(this.board[i].index);
+                }
+            }
+
+            return availableSquares;
+        },
+        tie() {
+                this.computerTurn = false;
+                this.endGame = true;
+                alert("That's a tie!")
+        },
+        printMove(move){
+            this.board[move].content = 'O'
+            this.oMoves.push(move)
+
+        },
+        playerMove(i){
+            if (!i.content && this.oMoves.length < 4) {
+                i.content = 'X'
+                this.xMoves.push(i.index)
+                this.computerTurn = true;
+            } else if (!i.content && this.oMoves.length === 4) {
+                i.content = 'X'
+                this.xMoves.push(i.index)
+                this.computerTurn = false;
+                this.tie()
+            }
+        },
+        computerMove(){
+            if (this.difficulty == 1) {
+                let availableSquares = this.availableSquares()
+                let move = this.randomNumber(availableSquares)
+                
+                this.printMove(move)
+                this.computerTurn = false;
+            } else if (this.difficulty == 2) {
+                let availableSquares = this.availableSquares()
+
+                if( availableSquares.length === 8) {
+                    let move = this.randomNumber(availableSquares)
+                
+                    this.printMove(move)
+                    this.computerTurn = false;
+                } else if (availableSquares.length < 8){
+                    this.winningMove()
+                    this.preventWinningMove()
+                    this.randomMove()
+                }
+            }
+        },
+
+        winningMove(){
+            if (this.computerTurn === true) {
+                for (let winningLine of this.winningLines) {
+                        const [a, b, c] = winningLine;
+                        
+                        if(this.oMoves.includes(c) && this.oMoves.includes(b) && !this.board[a].content) {
+                                this.printMove(a)
+                                this.computerTurn = false;
+                                break;
+                            
+                         } else if(this.oMoves.includes(a) && this.oMoves.includes(b) && !this.board[c].content) {
+                                this.printMove(c)
+                                this.computerTurn = false;
+                                break;
+                            
+                         } else if(this.oMoves.includes(a) && this.oMoves.includes(c) && !this.board[b].content) {
+                                this.printMove(b)
+                                this.computerTurn = false;
+                                break;
+                         }
+                }
+            }
+        },
+        preventWinningMove(){
+            if (this.computerTurn === true) { 
+                for (let winningLine of this.winningLines) {
+                        const [a, b, c] = winningLine;
+
+                        if(this.xMoves.includes(a) && this.xMoves.includes(b) && !this.board[c].content) {
+                                this.printMove(c)
+                                this.computerTurn = false;
+                                break;
+                        } else if(this.xMoves.includes(a) && this.xMoves.includes(c) && !this.board[b].content) {
+                                this.printMove(b)
+                                this.computerTurn = false;
+                                break;
+                        } else if(this.xMoves.includes(b) && this.xMoves.includes(c) && !this.board[a].content) {
+                                this.printMove(a)
+                                this.computerTurn = false;
+                                break;
+                        } 
+                }
+            }
+        },
+        randomMove(){
+            if (this.computerTurn === true) {
+                for (let winningLine of this.winningLines) {
+                    const [a, b, c] = winningLine;
+                    if(this.oMoves.includes(a) && !this.board[b].content && !this.board[c].content) {
+                        if (b) {
+                            this.printMove(b)
+                            this.computerTurn = false;
+                            break;
+                        }
+                    } else if(this.oMoves.includes(b) && !this.board[a].content && !this.board[c].content) {
+                        if (c) {
+                            this.printMove(c)
+                            this.computerTurn = false;
+                            break;
+                        }
+                    } else if(this.oMoves.includes(c) && !this.board[a].content && !this.board[a].content) {
+                        if (a) {
+                            this.printMove(a)
+                            this.computerTurn = false;
+                            break;
+                        }
+                    }
+                }
+            }
+        },
+        reset(){
+            for(let i=0; i < this.board.length; i++ ) {
+                this.board[i].content = null;
+            }
+            this.xMoves = [];
+            this.oMoves = [];
+            this.endGame = false;
+        }
+    },
+  }).mount('#app')
+
+</script>
+
+<style>
+    body {
+        background: rgb(114, 56, 56);
+    }
+
+    #app {
+        display: flex;
+        flex-direction: column;
+        align-items: center; 
+        margin: 100px;
+    }
+    .container {
+        width: 400px;
+        height: 300px;
+        background-color: rgb(118, 114, 109);
+        border: solid 5px rgb(189, 184, 184);
+        border-radius: 10px;
+        justify-content: center;
+        align-items: center;
+    }   
+    .title{
+        margin-top: -50px;
+        font-size: 4.5em;
+        font-weight: bolder;
+        font-family: 'Courier New', Courier, monospace;
+        text-align: center;
+        color: wheat;
+    }    
+    .selectContainer {
+        display: grid;
+        justify-items: center;
+        margin-top: -30;
+        margin-bottom: 45px;
+    }
+
+    label {
+        color: wheat;
+        font-size: 1.2em;
+        font-family: 'Courier New', Courier, monospace;
+        margin-bottom: 5px;
+    }
+
+    .select {
+        border-radius: 15px;
+        width: 150px;
+        padding: 5px;
+        color: wheat;
+        background-color: transparent;
+        border: 5px solid rgb(225, 215, 215);
+        font-family: 'Courier New', Courier, monospace;
+        font-size: 1em;
+    }
+
+    option {
+        color: wheat;
+        border-radius: 15px;
+        background-color: rgb(114, 56, 56);
+    }
+    .elementContainer {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-auto-rows: auto;
+        justify-items: center;
+    }
+
+    .elements {
+        font-size: 3em;
+        font-weight: bolder;
+        font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif ;
+        border-radius: 5px;
+        width: 132px;
+        height: 100px;
+    }
+
+    .resetContainer {
+        display: grid;
+        justify-items: center;
+        margin: 10px;
+    }
+
+    .reset{
+        width: 5em;
+        font-size: 1.1em;
+        font-weight: bold;
+        font-family: 'Courier New', Courier, monospace;
+        border-radius: 10px;
+        margin-top: 10px;
+        background-color: rgb(230, 123, 123);
+    }
+
+    .reset:hover{
+        box-shadow: 0 1px 6px 1px rgb(0, 0, 0);
+        background-color: rgb(218, 39, 39);
+    }
+
+    .container:hover {
+        box-shadow: 0 4px 8px 4px black;
+    }
+    .elements:hover {
+        cursor: pointer;
+        background-color: rgb(222, 177, 158);
+    }
+</style>
