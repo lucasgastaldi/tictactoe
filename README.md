@@ -1,4 +1,4 @@
 # Tic tac toe
 
 * Classic Tic tac toe vs Computer with difficulty selector (easy and expert).
-* **Created in Vue Js & Javascript.**
+* Created in **Vue Js & Javascript.**
